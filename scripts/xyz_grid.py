@@ -211,7 +211,11 @@ axis_options = [
     AxisOption("Prompt order", str_permutations, apply_order, format_value=format_value_join_list),
     AxisOptionTxt2Img("Sampler", str, apply_sampler, format_value=format_value, confirm=confirm_samplers, choices=lambda: [x.name for x in sd_samplers.samplers]),
     AxisOptionImg2Img("Sampler", str, apply_sampler, format_value=format_value, confirm=confirm_samplers, choices=lambda: [x.name for x in sd_samplers.samplers_for_img2img]),
-    AxisOption("Checkpoint name", str, apply_checkpoint, format_value=format_value, confirm=confirm_checkpoints, cost=1.0, choices=lambda: list(sd_models.checkpoints_list)),
+    AxisOption("Checkpoint name", str, apply_checkpoint,
+        format_value=format_value, confirm=confirm_checkpoints, cost=1.0,
+        choices=lambda:
+        sorted(list(sd_models.checkpoints_list[x].model_name for x in sd_models.checkpoints_list))),
+    #    sorted(list(sd_models.checkpoints_list[x].name.removesuffix('.safetensors').removesuffix('.ckpt') for x in sd_models.checkpoints_list))),
     AxisOption("Sigma Churn", float, apply_field("s_churn")),
     AxisOption("Sigma min", float, apply_field("s_tmin")),
     AxisOption("Sigma max", float, apply_field("s_tmax")),
