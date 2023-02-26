@@ -25,8 +25,15 @@ class ExtraNetworksPageCheckpoints(ui_extra_networks.ExtraNetworksPage):
                     preview = self.link_preview(file)
                     break
 
+            displayname = checkpoint.name_for_extra
+            if checkpoint.meta:
+                if checkpoint.meta.get('displayname'):
+                    displayname = checkpoint.meta['displayname']
+                elif checkpoint.meta.get('title'):
+                    displayname = checkpoint.meta['title']
+
             yield {
-                "name": checkpoint.name_for_extra,
+                "name": displayname,
                 "filename": path,
                 "preview": preview,
                 "search_term": self.search_terms_from_path(checkpoint.filename) + " " + (checkpoint.sha256 or ""),
