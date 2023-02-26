@@ -3,6 +3,7 @@ import os
 import re
 import torch
 from typing import Union
+import yaml
 
 from modules import shared, devices, sd_models, errors
 
@@ -73,7 +74,7 @@ def convert_diffusers_name_to_compvis(key, is_sd2):
 
 
 class LoraOnDisk:
-    def __init__(self, name, filename):
+    def __init__(self, name, filename, meta):
         self.name = name
         self.filename = filename
         self.metadata = {}
@@ -93,6 +94,7 @@ class LoraOnDisk:
             self.metadata = m
 
         self.ssmd_cover_images = self.metadata.pop('ssmd_cover_images', None)  # those are cover images and they are too big to display in UI as text
+        self.meta = meta
 
 
 class LoraModule:
@@ -353,7 +355,18 @@ def list_available_loras():
 
         name = os.path.splitext(os.path.basename(filename))[0]
 
-        available_loras[name] = LoraOnDisk(name, filename)
+        # See if we can find an associated YAML with meta-data
+        basename, _ = os.path.splitext(filename)
+        yaml_fn = basename + '.webui.yaml'
+        try:
+            with open(yaml_fn, 'r') as file:
+                meta = yaml.safe_load(file)
+        except:
+            # File not found/readable, initialize an empty dict
+            meta = {}
+
+
+        available_loras[name] = LoraOnDisk(name, filename, meta)
 
 
 available_loras = {}
