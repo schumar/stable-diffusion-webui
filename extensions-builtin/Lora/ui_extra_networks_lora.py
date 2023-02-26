@@ -16,8 +16,15 @@ class ExtraNetworksPageLora(ui_extra_networks.ExtraNetworksPage):
     def list_items(self):
         for name, lora_on_disk in sorted(lora.available_loras.items(), key=itemgetter(0)):
             path, ext = os.path.splitext(lora_on_disk.filename)
+            displayname = name
+            if lora_on_disk.meta:
+                if lora_on_disk.meta.get('displayname'):
+                    displayname = lora_on_disk.meta['displayname']
+                elif lora_on_disk.meta.get('title'):
+                    displayname = lora_on_disk.meta['title']
+
             yield {
-                "name": name,
+                "name": displayname,
                 "filename": path,
                 "preview": self.find_preview(path),
                 "description": self.find_description(path),
