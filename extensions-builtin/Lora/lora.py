@@ -2,6 +2,7 @@ import glob
 import os
 import re
 import torch
+import yaml
 
 from modules import shared, devices, sd_models
 
@@ -40,9 +41,10 @@ def convert_diffusers_name_to_compvis(key):
 
 
 class LoraOnDisk:
-    def __init__(self, name, filename):
+    def __init__(self, name, filename, meta):
         self.name = name
         self.filename = filename
+        self.meta = meta
 
 
 class LoraModule:
@@ -198,7 +200,18 @@ def list_available_loras():
 
         name = os.path.splitext(os.path.basename(filename))[0]
 
-        available_loras[name] = LoraOnDisk(name, filename)
+        # See if we can find an associated YAML with meta-data
+        basename, _ = os.path.splitext(filename)
+        yaml_fn = basename + '.webui.yaml'
+        try:
+            with open(yaml_fn, 'r') as file:
+                meta = yaml.safe_load(file)
+        except:
+            # File not found/readable, initialize an empty dict
+            meta = {}
+
+
+        available_loras[name] = LoraOnDisk(name, filename, meta)
 
 
 available_loras = {}
