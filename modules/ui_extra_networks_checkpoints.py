@@ -17,8 +17,15 @@ class ExtraNetworksPageCheckpoints(ui_extra_networks.ExtraNetworksPage):
         checkpoint: sd_models.CheckpointInfo
         for name, checkpoint in sorted(sd_models.checkpoints_list.items(), key=itemgetter(0)):
             path, ext = os.path.splitext(checkpoint.filename)
+            displayname = checkpoint.name_for_extra
+            if checkpoint.meta:
+                if checkpoint.meta.get('displayname'):
+                    displayname = checkpoint.meta['displayname']
+                elif checkpoint.meta.get('title'):
+                    displayname = checkpoint.meta['title']
+
             yield {
-                "name": checkpoint.name_for_extra,
+                "name": displayname,
                 "filename": path,
                 "preview": self.find_preview(path),
                 "description": self.find_description(path),
