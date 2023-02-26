@@ -13,6 +13,7 @@ __pycache__
 /gfpgan/weights/*.pth
 /ui-config.json
 /outputs
+/inputs
 /config.json
 /log
 /webui.settings.bat
