@@ -589,6 +589,8 @@ def save_image(image, path, basename, seed=None, prompt=None, extension='png', i
     if opts.export_for_4chan and (oversize or os.stat(fullfn).st_size > opts.img_downscale_threshold * 1024 * 1024):
         ratio = image.width / image.height
 
+        opts.target_side_length = int(opts.target_side_length)
+
         if oversize and ratio > 1:
             image = image.resize((round(opts.target_side_length), round(image.height * opts.target_side_length / image.width)), LANCZOS)
         elif oversize:
