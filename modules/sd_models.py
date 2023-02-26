@@ -61,7 +61,7 @@ class CheckpointInfo:
             with open(yaml_fn, 'r') as file:
                 self.meta = yaml.safe_load(file)
             pprint.pprint(self.meta)
-        except IOError:
+        except:
             # File not found/readable, initialize an empty dict
             self.meta = {}
 
