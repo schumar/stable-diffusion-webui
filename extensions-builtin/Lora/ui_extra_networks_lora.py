@@ -23,8 +23,15 @@ class ExtraNetworksPageLora(ui_extra_networks.ExtraNetworksPage):
                     preview = self.link_preview(file)
                     break
 
+            displayname = name
+            if lora_on_disk.meta:
+                if lora_on_disk.meta.get('displayname'):
+                    displayname = lora_on_disk.meta['displayname']
+                elif lora_on_disk.meta.get('title'):
+                    displayname = lora_on_disk.meta['title']
+
             yield {
-                "name": name,
+                "name": displayname,
                 "filename": path,
                 "preview": preview,
                 "search_term": self.search_terms_from_path(lora_on_disk.filename),
