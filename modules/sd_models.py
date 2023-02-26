@@ -8,6 +8,7 @@ import safetensors.torch
 from omegaconf import OmegaConf
 from os import mkdir
 from urllib import request
+import yaml
 import ldm.modules.midas as midas
 
 from ldm.util import instantiate_from_config
@@ -51,6 +52,16 @@ class CheckpointInfo:
         self.title = name if self.shorthash is None else f'{name} [{self.shorthash}]'
 
         self.ids = [self.hash, self.model_name, self.title, name, f'{name} [{self.hash}]'] + ([self.shorthash, self.sha256, f'{self.name} [{self.shorthash}]'] if self.shorthash else [])
+
+        # See if we can find an associated YAML with meta-data
+        basename, _ = os.path.splitext(abspath)
+        yaml_fn = basename + '.webui.yaml'
+        try:
+            with open(yaml_fn, 'r') as file:
+                self.meta = yaml.safe_load(file)
+        except IOError:
+            # File not found/readable, initialize an empty dict
+            self.meta = {}
 
     def register(self):
         checkpoints_list[self.title] = self
