@@ -9,6 +9,7 @@ from omegaconf import OmegaConf
 from os import mkdir
 from urllib import request
 import yaml
+import pprint
 import ldm.modules.midas as midas
 
 from ldm.util import instantiate_from_config
@@ -59,6 +60,7 @@ class CheckpointInfo:
         try:
             with open(yaml_fn, 'r') as file:
                 self.meta = yaml.safe_load(file)
+            pprint.pprint(self.meta)
         except IOError:
             # File not found/readable, initialize an empty dict
             self.meta = {}
