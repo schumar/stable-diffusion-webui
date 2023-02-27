@@ -356,8 +356,7 @@ def list_available_loras():
         name = os.path.splitext(os.path.basename(filename))[0]
 
         # See if we can find an associated YAML with meta-data
-        basename, _ = os.path.splitext(filename)
-        yaml_fn = basename + '.webui.yaml'
+        yaml_fn = filename + '.webui.yaml'
         try:
             with open(yaml_fn, 'r') as file:
                 meta = yaml.safe_load(file)

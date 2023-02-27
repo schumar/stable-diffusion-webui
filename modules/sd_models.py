@@ -54,8 +54,7 @@ class CheckpointInfo:
         self.ids = [self.hash, self.model_name, self.title, name, f'{name} [{self.hash}]'] + ([self.shorthash, self.sha256, f'{self.name} [{self.shorthash}]'] if self.shorthash else [])
 
         # See if we can find an associated YAML with meta-data
-        basename, _ = os.path.splitext(abspath)
-        yaml_fn = basename + '.webui.yaml'
+        yaml_fn = abspath + '.webui.yaml'
         try:
             with open(yaml_fn, 'r') as file:
                 self.meta = yaml.safe_load(file)
