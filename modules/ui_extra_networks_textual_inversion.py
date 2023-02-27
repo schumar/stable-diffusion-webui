@@ -16,8 +16,15 @@ class ExtraNetworksPageTextualInversion(ui_extra_networks.ExtraNetworksPage):
     def list_items(self):
         for embedding in sorted(sd_hijack.model_hijack.embedding_db.word_embeddings.values(), key=attrgetter('name')):
             path, ext = os.path.splitext(embedding.filename)
+            displayname = embedding.name
+            if embedding.meta:
+                if embedding.meta.get('displayname'):
+                    displayname = "✅ " + embedding.meta['displayname']
+                elif embedding.meta.get('title'):
+                    displayname = "🗸 " + embedding.meta['title']
+
             yield {
-                "name": embedding.name,
+                "name": displayname,
                 "filename": embedding.filename,
                 "preview": self.find_preview(path),
                 "description": self.find_description(path),
