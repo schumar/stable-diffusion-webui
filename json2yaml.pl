@@ -11,6 +11,8 @@ use YAML qw(DumpFile);
 use Data::Dumper;
 use Digest;
 
+my $guess = 0;
+
 my $basedir = '/local/stable-diffusion-webui/';
 my $metadir = "$basedir/models/meta";
 my $authcookie = 'SET_ME';
@@ -149,6 +151,8 @@ while (my $fn = shift @ARGV) {
                     }
                 }
 
+                next unless $guess;
+
                 if (lc $fn eq lc $$file{name}) {
                     printf STDERR "    Found %s (%s) via filename\n", $modelname, $versionname;
                     push @candidates, $version;
@@ -263,6 +267,7 @@ while (my $fn = shift @ARGV) {
             printf STDERR "    Downloaded %s\n", $img_fn;
         }
 
+        last;
 
     }
 }
