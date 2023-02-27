@@ -22,6 +22,18 @@ my $ua = HTTP::Tiny->new(
     default_headers => { Cookie => "__Host-next-auth.csrf-token=$authcookie" }
 );
 
+# Mapping from our YAML key names for examples to the ones at civitai
+my %example_yaml_keys = (
+    size         => 'Size',
+    seed         => 'seed',
+    'model-hash' => 'Model hash',
+    sampler      => 'sampler',
+    steps        => 'steps',
+    cfg          => 'cfgScale',
+    prompt       => 'prompt',
+    neg          => 'negativePrompt',
+);
+
 # Read all JSONs
 my @json;
 opendir my $dh, $metadir or die "Can't open $metadir: $!.";
@@ -221,17 +233,13 @@ while (my $fn = shift @ARGV) {
                 }
             }
 
-            push @{$meta{examples}}, {
-                size    => $$ex{Size},
-                seed    => $$ex{seed},
-                'model-name' => $model_name,
-                'model-hash' => $$ex{'Model hash'},
-                sampler => $$ex{sampler},
-                steps   => $$ex{steps},
-                cfg     => $$ex{cfgScale},
-                prompt  => $$ex{prompt},
-                neg     => $$ex{negativePrompt},
+            my $ex_hash = {};
+            $$ex_hash{'model-name'} = $model_name if defined $model_name;
+            for my $key (keys %example_yaml_keys) {
+                my $their = $example_yaml_keys{$key};
+                $$ex_hash{$key} = $$ex{$their} if exists $$ex{$their} and defined $$ex{$their};
             }
+            push @{$meta{examples}}, $ex_hash;
         }
 
         DumpFile($yaml_fn, \%meta);
