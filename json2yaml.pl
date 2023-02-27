@@ -98,8 +98,13 @@ while (my $fn = shift @ARGV) {
     ##printf STDERR "    DBG: '%s' '%s' '%s' %d\n",
     ##    $fn_modelname, $fn_version, $fn_extension, $fn_size;
 
-    (my $yaml_fn = $fn) =~ s/\..*$//;
-    $yaml_fn .= '.webui.yaml';
+    my $yaml_fn = "$fn.webui.yaml";
+    (my $old_yaml_fn = $fn) =~ s/\..*$//; $old_yaml_fn .= '.webui.yaml';
+    if ( -e $old_yaml_fn ) {
+        printf STDERR "Renaming %s to new format\n", $old_yaml_fn;
+        rename $old_yaml_fn, $yaml_fn;
+        next;
+    }
     if ( -e $yaml_fn ) {
         # printf STDERR "    %s already exists.\n", $yaml_fn;
         next;
