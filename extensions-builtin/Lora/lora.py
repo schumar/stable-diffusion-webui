@@ -4,7 +4,6 @@ import re
 import torch
 from typing import Union
 import yaml
-import pprint
 
 from modules import shared, devices, sd_models, errors
 
@@ -362,7 +361,6 @@ def list_available_loras():
         try:
             with open(yaml_fn, 'r') as file:
                 meta = yaml.safe_load(file)
-            pprint.pprint(meta)
         except:
             # File not found/readable, initialize an empty dict
             meta = {}
