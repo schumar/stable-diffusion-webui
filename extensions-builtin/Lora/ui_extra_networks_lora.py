@@ -19,9 +19,9 @@ class ExtraNetworksPageLora(ui_extra_networks.ExtraNetworksPage):
             displayname = name
             if lora_on_disk.meta:
                 if lora_on_disk.meta.get('displayname'):
-                    displayname = lora_on_disk.meta['displayname']
+                    displayname = "✅ " + lora_on_disk.meta['displayname']
                 elif lora_on_disk.meta.get('title'):
-                    displayname = lora_on_disk.meta['title']
+                    displayname = "🗸 " + lora_on_disk.meta['title']
 
             yield {
                 "name": displayname,

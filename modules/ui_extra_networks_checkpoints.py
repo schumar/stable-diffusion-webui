@@ -20,9 +20,9 @@ class ExtraNetworksPageCheckpoints(ui_extra_networks.ExtraNetworksPage):
             displayname = checkpoint.name_for_extra
             if checkpoint.meta:
                 if checkpoint.meta.get('displayname'):
-                    displayname = checkpoint.meta['displayname']
+                    displayname = "✅ " + checkpoint.meta['displayname']
                 elif checkpoint.meta.get('title'):
-                    displayname = checkpoint.meta['title']
+                    displayname = "🗸 " + checkpoint.meta['title']
 
             yield {
                 "name": displayname,
