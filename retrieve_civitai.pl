@@ -26,38 +26,32 @@ while (my $url = shift @ARGV) {
 
     my $json;
 
-    if ( -e "${basename}_$id.json" and $cache_json ) {
+    next if ( -e "${basename}_$id.json" and $cache_json );
+
+    my $content;
+    if ( -e "${basename}_$id.html" and $cache_json ) {
         local $/ = undef;
-        open my $fh, '<', "${basename}_$id.json" or die "$!.";
-        $json = <$fh>;
+        open my $fh, '<', "${basename}_$id.html" or die "$!.";
+        $content = <$fh>;
         close $fh;
-
     } else {
-        my $content;
-        if ( -e "${basename}_$id.html" and $cache_json ) {
-            local $/ = undef;
-            open my $fh, '<', "${basename}_$id.html" or die "$!.";
-            $content = <$fh>;
+        my $response = $ua->get($url);
+        die "Failed: $response->{status} $response->{reason}." unless $response->{success};
+        $content = $response->{content};
+        if ($cache_html) {
+            open my $fh, '>', "${basename}_$id.html" or die "$!.";
+            print $fh $content;
             close $fh;
-        } else {
-            my $response = $ua->get($url);
-            die "Failed: $response->{status} $response->{reason}." unless $response->{success};
-            $content = $response->{content};
-            if ($cache_html) {
-                open my $fh, '>', "${basename}_$id.html" or die "$!.";
-                print $fh $content;
-                close $fh;
-            }
         }
-
-        die unless $content =~ m! type="application/json">(.+?)</script>!;
-        $json = $1;
-
-        open my $fh, '>', "${basename}_$id.json" or die "$!.";
-        print $fh $json;
-        close $fh;
     }
 
-    printf STDERR "Retrieved %s (%s)\n", $name, $type;
+    die unless $content =~ m! type="application/json">(.+?)</script>!;
+    $json = $1;
+
+    open my $fh, '>', "${basename}_$id.json" or die "$!.";
+    print $fh $json;
+    close $fh;
+
+    printf STDERR "Retrieved %s_%s.json\n", $basename, $id;
 }
 
