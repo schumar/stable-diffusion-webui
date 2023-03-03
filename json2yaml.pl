@@ -295,6 +295,11 @@ while (my $fn = shift @ARGV) {
             $meta{$key} = $$old_meta{$key} if not exists $meta{$key};
         }
 
+        # Clean up all "undef" data
+        for my $key (keys %meta) {
+            delete $meta{$key} if not defined $meta{$key};
+        }
+
         DumpFile($yaml_fn, \%meta);
         printf STDERR "    Wrote %s\n", $yaml_fn;
 
