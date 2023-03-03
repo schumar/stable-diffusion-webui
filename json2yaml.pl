@@ -193,7 +193,11 @@ while (my $fn = shift @ARGV) {
                     # just check if the model name *begin* with the
                     # parts taken from the file name
                     if ($modelname_clean =~ /^\Q$fn_modelname\E/i and
-                        lc $versionname_clean eq lc $fn_version and
+                        (
+                            lc $versionname_clean eq lc $fn_version
+                                or
+                            $fn_version eq '' and lc $versionname_clean eq lc $modelname_clean
+                        ) and
                         lc $fn_extension eq lc $extension and
                         $$file{sizeKB}-2 < $fn_size/1024 and
                         $$file{sizeKB}+2 > $fn_size/1024
