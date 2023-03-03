@@ -170,6 +170,7 @@ while (my $fn = shift @ARGV) {
                     if ($$hash{type} eq 'AutoV2' and $$hash{hash} eq $autov2) {
                         printf STDERR "    Found %s (%s, %s) via hash %s\n", $modelname, $versionname, $$file{name}, $autov2;
                         push @candidates, $version;
+                        push @files, $file;
                         next VERSION;
                     }
                 }
@@ -179,6 +180,7 @@ while (my $fn = shift @ARGV) {
                 if (lc $fn eq lc $$file{name}) {
                     printf STDERR "    Found %s (%s) via filename\n", $modelname, $versionname;
                     push @candidates, $version;
+                    push @files, $file;
                     next;
                 }
 
