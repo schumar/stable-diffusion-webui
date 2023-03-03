@@ -12,6 +12,7 @@ use Data::Dumper;
 use Digest;
 
 my $guess = 0;
+my $update = 0;
 
 my $basedir = '/local/stable-diffusion-webui/';
 my $metadir = "$basedir/models/meta";
@@ -22,6 +23,11 @@ my $json_codec = JSON->new->allow_nonref;
 
 my $ua = HTTP::Tiny->new(
     default_headers => { Cookie => "__Host-next-auth.csrf-token=$authcookie" }
+);
+
+# Which keys to keep from old YAML when updating
+my @keep_keys = (
+    'nsfw',
 );
 
 # Mapping from our YAML key names for examples to the ones at civitai
@@ -107,9 +113,13 @@ while (my $fn = shift @ARGV) {
         rename $old_yaml_fn, $yaml_fn;
         next;
     }
+
+    my $old_meta;
     if ( -e $yaml_fn ) {
         # printf STDERR "    %s already exists.\n", $yaml_fn;
-        next;
+        next unless $update;
+        # Read old YAML
+        $old_meta = YAML::LoadFile("$yaml_fn");
     }
 
     printf STDERR "Creating YAML for %s\n", $fn;
@@ -249,6 +259,16 @@ while (my $fn = shift @ARGV) {
                 $$ex_hash{$key} = $$ex{$their} if exists $$ex{$their} and defined $$ex{$their};
             }
             push @{$meta{examples}}, $ex_hash;
+        }
+
+        # Preserve some data from the old file
+        for my $key (@keep_keys) {
+            $meta{$key} = $$old_meta{$key} if exists $$old_meta{$key};
+        }
+        # Also keep everything from the old file which doesn't exist in the new
+        # one
+        for my $key (keys %$old_meta) {
+            $meta{$key} = $$old_meta{$key} if not exists $meta{$key};
         }
 
         DumpFile($yaml_fn, \%meta);
