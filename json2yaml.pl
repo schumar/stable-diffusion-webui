@@ -18,7 +18,7 @@ my $update = 0;
 my $basedir = '/local/stable-diffusion-webui/';
 my $metadir = "$basedir/models/meta";
 my $authcookie = 'SET_ME';
-my $imgcache = 'https://imagecache.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/';
+my $imgcache = 'https://imagecache.civitai.com/xG1nkqKTMzGDvpLrqFT7WA';
 
 my $json_codec = JSON->new->allow_nonref;
 
@@ -281,7 +281,9 @@ while (my $fn = shift @ARGV) {
         $img_fn .= '.preview.png';
         my $img = $$version{images}[0];
         if ( ! -e $img_fn ) {
-            my $response = $ua->get("$imgcache/$$img{url}/width=$$img{width}");
+            my $url = "$imgcache/$$img{url}/width=$$img{width}/$$img{id}";
+            # printf STDERR "DBG: %s\n", $url;
+            my $response = $ua->get($url);
             die "Failed: $response->{status} $response->{reason}." unless $response->{success};
             my $content = $response->{content};
             open my $fh, '>', $img_fn or die "$!.";
