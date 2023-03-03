@@ -98,6 +98,17 @@ while (my $fn = shift @ARGV) {
     }
     my $fn_size = (stat(_))[7];
 
+    # Don't work on VAEs
+    if ($fn =~ /\.vae\.pt$/ or $fn =~ m!(^|/)VAE!) {
+        printf STDERR "Ignoring VAE %s\n", $fn;
+        next;
+    }
+    # Ignore the files that this script itself is generating
+    # as well as previws generated via the UI, and other YAMLs
+    if ($fn =~ /(\.png|\.yaml)$/) {
+        next;
+    }
+
     my ($fn_modelname, $fn_version, $fn_extension);
     if ($fn =~ /^([^_]+)(?:_(.*?))?(\..+)?$/) {
         $fn_modelname = $1;
