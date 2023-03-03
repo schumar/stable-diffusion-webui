@@ -303,7 +303,7 @@ while (my $fn = shift @ARGV) {
         DumpFile($yaml_fn, \%meta);
         printf STDERR "    Wrote %s\n", $yaml_fn;
 
-        (my $img_fn = $fn) =~ s/\..*$//;
+        (my $img_fn = $fn) =~ s/\.[^.]*$//;
         $img_fn .= '.preview.png';
         my $img = $$version{images}[0];
         if ( ! -e $img_fn ) {
