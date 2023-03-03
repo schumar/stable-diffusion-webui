@@ -278,6 +278,10 @@ while (my $fn = shift @ARGV) {
                 my $their = $example_yaml_keys{$key};
                 $$ex_hash{$key} = $$ex{$their} if exists $$ex{$their} and defined $$ex{$their};
             }
+
+            # Image URL
+            $$ex_hash{'url'} = "$imgcache/$$example{url}/width=$$example{width}/$$example{id}";
+
             push @{$meta{examples}}, $ex_hash;
         }
 
