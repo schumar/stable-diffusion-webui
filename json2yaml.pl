@@ -12,6 +12,7 @@ use Data::Dumper;
 use Digest;
 
 my $guess = 0;
+my $allow_multimatch = 0;
 my $update = 0;
 
 my $basedir = '/local/stable-diffusion-webui/';
@@ -80,7 +81,8 @@ for my $json (@json) {
         for my $file (@{$$version{files}}) {
             for my $hash (@{$$file{hashes}}) {
                 if ($$hash{type} eq 'AutoV2') {
-                    $name_of_hash{lc $$hash{hash}} = $prettyname;
+                    $name_of_hash{lc $$hash{hash}} = $prettyname
+                        unless exists $name_of_hash{lc $$hash{hash}};
                 }
             }
         }
@@ -155,7 +157,7 @@ while (my $fn = shift @ARGV) {
             for my $file (@{$$version{files}}) {
                 for my $hash (@{$$file{hashes}}) {
                     if ($$hash{type} eq 'AutoV2' and $$hash{hash} eq $autov2) {
-                        printf STDERR "    Found %s (%s) via hash %s\n", $modelname, $versionname, $autov2;
+                        printf STDERR "    Found %s (%s, %s) via hash %s\n", $modelname, $versionname, $$file{name}, $autov2;
                         push @candidates, $version;
                         next VERSION;
                     }
@@ -195,12 +197,13 @@ while (my $fn = shift @ARGV) {
             }
         }
 
-        next unless @candidates;
+        next if @candidates == 0;
 
         if (@candidates > 1) {
             printf STDERR "    Multiple matching versions found :(\n";
-            next;
+            next unless $allow_multimatch;
         }
+
         my $version = $candidates[0];
         my $file = $files[0];
 
