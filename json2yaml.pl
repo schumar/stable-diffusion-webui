@@ -10,15 +10,23 @@ use JSON;
 use YAML qw(DumpFile);
 use Data::Dumper;
 use Digest;
-
-my $guess = 0;
-my $allow_multimatch = 0;
-my $update = 0;
+use Getopt::Long;
 
 my $basedir = '/local/stable-diffusion-webui/';
 my $metadir = "$basedir/models/meta";
 my $authcookie = 'SET_ME';
 my $imgcache = 'https://imagecache.civitai.com/xG1nkqKTMzGDvpLrqFT7WA';
+
+my $guess;
+my $allow_multimatch;
+my $update;
+
+Getopt::Long::Configure ("bundling");
+GetOptions (
+    'guess|g'    => \$guess,
+    'update|u'   => \$update,
+	'multi|m'    => \$allow_multimatch,
+) || die "Usage: $0 [--guess] [--update] [--multi]\n";
 
 my $json_codec = JSON->new->allow_nonref;
 
