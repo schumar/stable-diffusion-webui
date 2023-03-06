@@ -20,13 +20,15 @@ my $imgcache = 'https://imagecache.civitai.com/xG1nkqKTMzGDvpLrqFT7WA';
 my $guess;
 my $allow_multimatch;
 my $update;
+my $versionid;
 
 Getopt::Long::Configure ("bundling");
 GetOptions (
     'guess|g'    => \$guess,
     'update|u'   => \$update,
-	'multi|m'    => \$allow_multimatch,
-) || die "Usage: $0 [--guess] [--update] [--multi]\n";
+    'multi|m'    => \$allow_multimatch,
+    'version|i=i'=> \$versionid,
+) || die "Usage: $0 [--guess] [--update] [--multi] [--version=1234]\n";
 
 my $json_codec = JSON->new->allow_nonref;
 
@@ -146,11 +148,15 @@ while (my $fn = shift @ARGV) {
     printf STDERR "Creating YAML for %s\n", $fn;
 
     # Calculate "AutoV2" hash (first 5 byte of SHA256 digest)
-    my $ctx = Digest->new("SHA-256");
-    open my $fh, '<', $fn or die "$!.";
-    $ctx->addfile($fh);
-    close $fh;
-    my $autov2 = uc substr($ctx->hexdigest, 0, 10);
+    # unless user has already specified a versionid
+    my $autov2;
+    unless ($versionid) {
+        my $ctx = Digest->new("SHA-256");
+        open my $fh, '<', $fn or die "$!.";
+        $ctx->addfile($fh);
+        close $fh;
+        $autov2 = uc substr($ctx->hexdigest, 0, 10);
+    }
 
     for my $json (@json) {
         my @candidates;
@@ -159,6 +165,16 @@ while (my $fn = shift @ARGV) {
         (my $modelname_clean = $modelname) =~ s/[^a-z0-9]//gi;
 
         VERSION: for my $version (@{$$json{modelVersions}}) {
+
+            # If user has specified a specific versionid, we don't need to do
+            # all the other tests
+            if ($versionid) {
+                if ($$version{id} == $versionid) {
+                    push @candidates, $version;
+                }
+                next;
+            }
+
             my $versionname = $$version{name};
 
             # civitai seems to remove the model name from the version name,
