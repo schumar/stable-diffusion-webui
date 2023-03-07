@@ -9,6 +9,7 @@ import tqdm
 import html
 import datetime
 import csv
+import yaml
 import safetensors.torch
 
 import numpy as np
@@ -185,6 +186,15 @@ class EmbeddingDatabase:
         embedding.vectors = vec.shape[0]
         embedding.shape = vec.shape[-1]
         embedding.filename = path
+
+        # See if we can find an associated YAML with meta-data
+        yaml_fn = path + '.webui.yaml'
+        try:
+            with open(yaml_fn, 'r') as file:
+                embedding.meta = yaml.safe_load(file)
+        except:
+            # File not found/readable, initialize an empty dict
+            embedding.meta = {}
 
         if self.expected_shape == -1 or self.expected_shape == embedding.shape:
             self.register_embedding(embedding, shared.sd_model)
