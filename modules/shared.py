@@ -156,6 +156,7 @@ config_filename = cmd_opts.ui_settings_file
 
 os.makedirs(cmd_opts.hypernetwork_dir, exist_ok=True)
 hypernetworks = {}
+hypernetworks_full = {}
 loaded_hypernetworks = []
 
 
@@ -163,6 +164,7 @@ def reload_hypernetworks():
     from modules.hypernetworks import hypernetwork
     global hypernetworks
 
+    # list_hypernetworks() will also refresh shared.hypernetworks_full
     hypernetworks = hypernetwork.list_hypernetworks(cmd_opts.hypernetwork_dir)
 
 
