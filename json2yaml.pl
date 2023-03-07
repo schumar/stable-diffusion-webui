@@ -172,16 +172,17 @@ while (my $fn = shift @ARGV) {
 
         VERSION: for my $version (@{$$json{modelVersions}}) {
 
+            my $versionname = $$version{name};
+
             # If user has specified a specific versionid, we don't need to do
             # all the other tests
             if ($versionid) {
                 if ($$version{id} == $versionid) {
+                    printf STDERR "    Using %s (%s) via version-id %d\n", $modelname, $versionname, $versionid;
                     push @candidates, $version;
                 }
                 next;
             }
-
-            my $versionname = $$version{name};
 
             # civitai seems to remove the model name from the version name,
             # e.g. if model "foo bar" has a version "foo bar v123", the
