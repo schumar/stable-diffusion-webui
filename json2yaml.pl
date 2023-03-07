@@ -352,5 +352,9 @@ while (my $fn = shift @ARGV) {
         last;
 
     }
+
+    # Make sure that we don't update multiple files when a versionid was
+    # specified
+    last if $versionid;
 }
 
