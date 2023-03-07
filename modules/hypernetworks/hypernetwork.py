@@ -12,7 +12,7 @@ import torch
 import tqdm
 from einops import rearrange, repeat
 from ldm.util import default
-from modules import devices, processing, sd_models, shared, sd_samplers, hashes, sd_hijack_checkpoint
+from modules import devices, processing, sd_models, shared, sd_samplers, hashes, sd_hijack_checkpoint, paths
 from modules.textual_inversion import textual_inversion, logging
 from modules.textual_inversion.learn_schedule import LearnRateScheduler
 from torch import einsum
@@ -20,7 +20,10 @@ from torch.nn.init import normal_, xavier_normal_, xavier_uniform_, kaiming_norm
 
 from collections import defaultdict, deque
 from statistics import stdev, mean
+import yaml
 
+
+hypernetworks_path = os.path.abspath(os.path.join(paths.models_path, "hypernetworks"))
 
 optimizer_dict = {optim_name : cls_obj for optim_name, cls_obj in inspect.getmembers(torch.optim, inspect.isclass) if optim_name != "Optimizer"}
 
@@ -310,13 +313,54 @@ class Hypernetwork:
         return sha256[0:10] if sha256 else None
 
 
+class HypernetworkInfo:
+    def __init__(self, filename):
+        self.filename = filename
+        abspath = os.path.abspath(filename)
+
+        if shared.cmd_opts.hypernetwork_dir is not None and abspath.startswith(shared.cmd_opts.hypernetwork_dir):
+            name = abspath.replace(shared.cmd_opts.hypernetwork_dir, '')
+        elif abspath.startswith(hypernetworks_path):
+            name = abspath.replace(hypernetworks_path, '')
+        else:
+            name = os.path.basename(filename)
+
+        if name.startswith("\\") or name.startswith("/"):
+            name = name[1:]
+
+        self.name = name
+        self.name_for_extra = os.path.splitext(os.path.basename(filename))[0]
+        self.hypernetwork_name = os.path.splitext(name.replace("/", "_").replace("\\", "_"))[0]
+
+        self.title = name
+
+        # See if we can find an associated YAML with meta-data
+        yaml_fn = abspath + '.webui.yaml'
+        try:
+            with open(yaml_fn, 'r') as file:
+                self.meta = yaml.safe_load(file)
+        except:
+            # File not found/readable, initialize an empty dict
+            self.meta = {}
+
+    def register(self):
+        shared.hypernetworks_full[self.title] = self
+
+
 def list_hypernetworks(path):
+    # This will return a dictionary with name=>filename (for legacy reasons),
+    # but will also populate the shared.hypernetworks_full dictionary
+
+    shared.hypernetworks_full.clear()
+
     res = {}
     for filename in sorted(glob.iglob(os.path.join(path, '**/*.pt'), recursive=True), key=str.lower):
-        name = os.path.splitext(os.path.basename(filename))[0]
+        hypernetwork_info = HypernetworkInfo(filename)
+        hypernetwork_info.register()
+
         # Prevent a hypothetical "None.pt" from being listed.
-        if name != "None":
-            res[name] = filename
+        if hypernetwork_info.name_for_extra != "None":
+            res[hypernetwork_info.name_for_extra] = hypernetwork_info.filename
     return res
 
 
