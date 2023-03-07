@@ -44,4 +44,10 @@ python_cmd="python3.10"
 # Uncomment to enable accelerated launch
 #export ACCELERATE="True"
 
+[ -d /tmp/webui ] || mkdir /tmp/webui
+chmod 700 /tmp/webui
+export TMPDIR=/tmp/webui
+
+renice 10 $$
+
 ###########################################
