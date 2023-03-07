@@ -21,8 +21,15 @@ class ExtraNetworksPageTextualInversion(ui_extra_networks.ExtraNetworksPage):
             if os.path.isfile(preview_file):
                 preview = self.link_preview(preview_file)
 
+            displayname = embedding.name
+            if embedding.meta:
+                if embedding.meta.get('displayname'):
+                    displayname = embedding.meta['displayname']
+                elif embedding.meta.get('title'):
+                    displayname = embedding.meta['title']
+
             yield {
-                "name": embedding.name,
+                "name": displayname,
                 "filename": embedding.filename,
                 "preview": preview,
                 "search_term": self.search_terms_from_path(embedding.filename),
