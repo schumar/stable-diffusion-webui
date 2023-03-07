@@ -77,6 +77,8 @@ closedir $dh;
 # build a list of hash->name
 my %name_of_hash;
 for my $json (@json) {
+    # Sanity-check the JSON
+    next unless exists $$json{name} and exists $$json{modelVersions};
     (my $model = $$json{name}) =~ s/[^a-z0-9_ .()-]//gi;
     for my $version (@{$$json{modelVersions}}) {
         (my $vername = $$version{name}) =~ s/[^a-z0-9_ .()-]//gi;
@@ -161,6 +163,10 @@ while (my $fn = shift @ARGV) {
     for my $json (@json) {
         my @candidates;
         my @files;
+
+        # Sanity-check the JSON
+        next unless exists $$json{name} and exists $$json{modelVersions};
+
         my $modelname = $$json{name};
         (my $modelname_clean = $modelname) =~ s/[^a-z0-9]//gi;
 
