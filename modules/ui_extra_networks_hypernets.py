@@ -22,9 +22,9 @@ class ExtraNetworksPageHypernetworks(ui_extra_networks.ExtraNetworksPage):
             displayname = name
             if hypernetwork.meta:
                 if hypernetwork.meta.get('displayname'):
-                    displayname = hypernetwork.meta['displayname']
+                    displayname = "✅ " + hypernetwork.meta['displayname']
                 elif hypernetwork.meta.get('title'):
-                    displayname = hypernetwork.meta['title']
+                    displayname = "🗸 " + hypernetwork.meta['title']
 
             yield {
                 "name": displayname,
