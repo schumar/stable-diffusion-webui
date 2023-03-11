@@ -160,9 +160,10 @@ while (my $fn = shift @ARGV) {
         $autov2 = uc substr($ctx->hexdigest, 0, 10);
     }
 
+    my @candidates;
+    my @files;
+
     for my $json (@json) {
-        my @candidates;
-        my @files;
 
         # Sanity-check the JSON
         next unless exists $$json{name} and exists $$json{modelVersions};
@@ -179,7 +180,11 @@ while (my $fn = shift @ARGV) {
             if ($versionid) {
                 if ($$version{id} == $versionid) {
                     printf STDERR "    Using %s (%s) via version-id %d\n", $modelname, $versionname, $versionid;
-                    push @candidates, $version;
+                    push @candidates, {
+                        json => $json,
+                        version => $version,
+                        file => undef,
+                    };
                 }
                 next;
             }
@@ -200,8 +205,11 @@ while (my $fn = shift @ARGV) {
                 for my $hash (@{$$file{hashes}}) {
                     if ($$hash{type} eq 'AutoV2' and $$hash{hash} eq $autov2) {
                         printf STDERR "    Found %s (%s, %s) via hash %s\n", $modelname, $versionname, $$file{name}, $autov2;
-                        push @candidates, $version;
-                        push @files, $file;
+                        push @candidates, {
+                            json => $json,
+                            version => $version,
+                            file => $file,
+                        };
                         next VERSION;
                     }
                 }
@@ -210,8 +218,11 @@ while (my $fn = shift @ARGV) {
 
                 if (lc $fn eq lc $$file{name}) {
                     printf STDERR "    Found %s (%s) via filename\n", $modelname, $versionname;
-                    push @candidates, $version;
-                    push @files, $file;
+                    push @candidates, {
+                        json => $json,
+                        version => $version,
+                        file => $file,
+                    };
                     next;
                 }
 
@@ -234,8 +245,11 @@ while (my $fn = shift @ARGV) {
                         $$file{sizeKB}+2 > $fn_size/1024
                     ) {
                         printf STDERR "    Found %s (%s) via heuristics\n", $modelname, $versionname;
-                        push @candidates, $version;
-                        push @files, $file;
+                        push @candidates, {
+                            json => $json,
+                            version => $version,
+                            file => $file,
+                        };
                         next;
                     }
                     # printf STDERR "    %s %s %s != %s %s %s\n",
@@ -244,113 +258,118 @@ while (my $fn = shift @ARGV) {
                 }
             }
         }
+    }
 
-        next if @candidates == 0;
 
-        if (@candidates > 1) {
-            printf STDERR "    Multiple matching versions found :(\n";
-            next unless $allow_multimatch;
+    if (@candidates == 0) {
+        printf STDERR "    Not found :(\n";
+        next;
+    }
+
+    if (@candidates > 1) {
+        printf STDERR "    Multiple matching versions found :(\n";
+        for my $c (@candidates) {
+            printf STDERR "        %s (%s)\n", $$c{json}{name}, $$c{version}{name};
         }
+        next unless $allow_multimatch;
+    }
 
-        my $version = $candidates[0];
-        my $file = $files[0];
+    my $json = $candidates[0]{json};
+    my $version = $candidates[0]{version};
+    my $file = $candidates[0]{file};
 
-        ## printf STDERR "    DBG: model name = '%s'\n", $$json{name};
+    ## printf STDERR "    DBG: model name = '%s'\n", $$json{name};
 
-        ### Build our YAML
-        my %meta = (
-            title => $$json{name},
-            type => $$json{type},
-            description => $$json{description},
-            author  => $$json{user}{username},
-            source  => $$json{page_url},
-            nsfw    => $$json{nsfw} ? 'true' : 'false',
-            version => $$version{name},
-            updated => $$version{updatedAt},
-            base    => $$version{baseModel},
-            trigger => $$version{trainedWords},
-            url     => $$file{url},
-            'filename-orig' => $$file{name},
-        );
-        if (exists $$json{checkpointType} and defined $$json{checkpointType}) {
-            $meta{type} .= ' '.$$json{checkpointType};
-        }
-        if (exists $$version{description} and defined $$version{description} and $$version{description} ne '') {
-            $meta{description} .= '<h2>Version information</h2>'.$$version{description};
-        }
-        for my $tag (@{$$json{tagsOnModels}}) {
-            push @{$meta{tags}}, $$tag{tag}{name};
-        }
-        for my $example (@{$$version{images}}) {
-            my $ex = $$example{meta};
+    ### Build our YAML
+    my %meta = (
+        title => $$json{name},
+        type => $$json{type},
+        description => $$json{description},
+        author  => $$json{user}{username},
+        source  => $$json{page_url},
+        nsfw    => $$json{nsfw} ? 'true' : 'false',
+        version => $$version{name},
+        updated => $$version{updatedAt},
+        base    => $$version{baseModel},
+        trigger => $$version{trainedWords},
+        url     => $$file{url},
+        'filename-orig' => $$file{name},
+    );
+    if (exists $$json{checkpointType} and defined $$json{checkpointType}) {
+        $meta{type} .= ' '.$$json{checkpointType};
+    }
+    if (exists $$version{description} and defined $$version{description} and $$version{description} ne '') {
+        $meta{description} .= '<h2>Version information</h2>'.$$version{description};
+    }
+    for my $tag (@{$$json{tagsOnModels}}) {
+        push @{$meta{tags}}, $$tag{tag}{name};
+    }
+    for my $example (@{$$version{images}}) {
+        my $ex = $$example{meta};
 
-            # Some example images don't have meta-data :( skip 'em
-            next unless exists $$ex{prompt};
+        # Some example images don't have meta-data :( skip 'em
+        next unless exists $$ex{prompt};
 
-            # Find model name
-            my $model_name = exists $$ex{Model} ? $$ex{Model} : undef;
-            unless (defined $model_name and $model_name ne '') {
-                if (exists $$ex{'Model hash'} and defined $$ex{'Model hash'}) {
-                    if (exists $name_of_hash{$$ex{'Model hash'}}) {
-                        $model_name = $name_of_hash{$$ex{'Model hash'}};
-                        ## printf STDERR "    DBG: found model %s by hash %s\n",
-                        ##     $model_name, $$ex{'Model hash'};
-                    } else {
-                        $model_name = undef;
-                    }
+        # Find model name
+        my $model_name = exists $$ex{Model} ? $$ex{Model} : undef;
+        unless (defined $model_name and $model_name ne '') {
+            if (exists $$ex{'Model hash'} and defined $$ex{'Model hash'}) {
+                if (exists $name_of_hash{$$ex{'Model hash'}}) {
+                    $model_name = $name_of_hash{$$ex{'Model hash'}};
+                    ## printf STDERR "    DBG: found model %s by hash %s\n",
+                    ##     $model_name, $$ex{'Model hash'};
                 } else {
                     $model_name = undef;
                 }
+            } else {
+                $model_name = undef;
             }
-
-            my $ex_hash = {};
-            $$ex_hash{'model-name'} = $model_name if defined $model_name;
-            for my $key (keys %example_yaml_keys) {
-                my $their = $example_yaml_keys{$key};
-                $$ex_hash{$key} = $$ex{$their} if exists $$ex{$their} and defined $$ex{$their};
-            }
-
-            # Image URL
-            $$ex_hash{'url'} = "$imgcache/$$example{url}/width=$$example{width}/$$example{id}";
-
-            push @{$meta{examples}}, $ex_hash;
         }
 
-        # Preserve some data from the old file
-        for my $key (@keep_keys) {
-            $meta{$key} = $$old_meta{$key} if exists $$old_meta{$key};
-        }
-        # Also keep everything from the old file which doesn't exist in the new
-        # one
-        for my $key (keys %$old_meta) {
-            $meta{$key} = $$old_meta{$key} if not exists $meta{$key};
+        my $ex_hash = {};
+        $$ex_hash{'model-name'} = $model_name if defined $model_name;
+        for my $key (keys %example_yaml_keys) {
+            my $their = $example_yaml_keys{$key};
+            $$ex_hash{$key} = $$ex{$their} if exists $$ex{$their} and defined $$ex{$their};
         }
 
-        # Clean up all "undef" data
-        for my $key (keys %meta) {
-            delete $meta{$key} if not defined $meta{$key};
-        }
+        # Image URL
+        $$ex_hash{'url'} = "$imgcache/$$example{url}/width=$$example{width}/$$example{id}";
 
-        DumpFile($yaml_fn, \%meta);
-        printf STDERR "    Wrote %s\n", $yaml_fn;
+        push @{$meta{examples}}, $ex_hash;
+    }
 
-        (my $img_fn = $fn) =~ s/\.[^.]*$//;
-        $img_fn .= '.preview.png';
-        my $img = $$version{images}[0];
-        if ( ! -e $img_fn ) {
-            my $url = "$imgcache/$$img{url}/width=$$img{width}/$$img{id}";
-            # printf STDERR "DBG: %s\n", $url;
-            my $response = $ua->get($url);
-            die "Failed: $response->{status} $response->{reason}." unless $response->{success};
-            my $content = $response->{content};
-            open my $fh, '>', $img_fn or die "$!.";
-            print $fh $content;
-            close $fh;
-            printf STDERR "    Downloaded %s\n", $img_fn;
-        }
+    # Preserve some data from the old file
+    for my $key (@keep_keys) {
+        $meta{$key} = $$old_meta{$key} if exists $$old_meta{$key};
+    }
+    # Also keep everything from the old file which doesn't exist in the new
+    # one
+    for my $key (keys %$old_meta) {
+        $meta{$key} = $$old_meta{$key} if not exists $meta{$key};
+    }
 
-        last;
+    # Clean up all "undef" data
+    for my $key (keys %meta) {
+        delete $meta{$key} if not defined $meta{$key};
+    }
 
+    DumpFile($yaml_fn, \%meta);
+    printf STDERR "    Wrote %s\n", $yaml_fn;
+
+    (my $img_fn = $fn) =~ s/\.[^.]*$//;
+    $img_fn .= '.preview.png';
+    my $img = $$version{images}[0];
+    if ( ! -e $img_fn ) {
+        my $url = "$imgcache/$$img{url}/width=$$img{width}/$$img{id}";
+        # printf STDERR "DBG: %s\n", $url;
+        my $response = $ua->get($url);
+        die "Failed: $response->{status} $response->{reason}." unless $response->{success};
+        my $content = $response->{content};
+        open my $fh, '>', $img_fn or die "$!.";
+        print $fh $content;
+        close $fh;
+        printf STDERR "    Downloaded %s\n", $img_fn;
     }
 
     # Make sure that we don't update multiple files when a versionid was
