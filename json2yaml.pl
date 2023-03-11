@@ -116,7 +116,7 @@ while (my $fn = shift @ARGV) {
         next;
     }
     # Ignore the files that this script itself is generating
-    # as well as previws generated via the UI, and other YAMLs
+    # as well as previews generated via the UI, and other YAMLs
     if ($fn =~ /(\.png|\.yaml)$/) {
         next;
     }
