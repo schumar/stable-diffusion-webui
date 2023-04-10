@@ -13,7 +13,7 @@ my $basedir = '/local/stable-diffusion-webui/';
 my $metadir = "$basedir/models/meta";
 
 my $cache_html = 0;
-my $cache_json = 1;
+my $cache_json = 0;
 
 my $ua = HTTP::Tiny->new(
     default_headers => { Cookie => "__Host-next-auth.csrf-token=$authcookie" }
