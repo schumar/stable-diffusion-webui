@@ -365,16 +365,23 @@ while (my $fn = shift @ARGV) {
     (my $img_fn = $fn) =~ s/\.[^.]*$//;
     $img_fn .= '.preview.png';
     my $img = $$version{images}[0];
-    if ( ! -e $img_fn ) {
-        my $url = "$imgcache/$$img{url}/width=$$img{width}/$$img{id}";
-        # printf STDERR "DBG: %s\n", $url;
-        my $response = $ua->get($url);
-        die "Failed: $response->{status} $response->{reason}." unless $response->{success};
-        my $content = $response->{content};
-        open my $fh, '>', $img_fn or die "$!.";
-        print $fh $content;
-        close $fh;
-        printf STDERR "    Downloaded %s\n", $img_fn;
+    if (defined $img) {
+        if ( ! -e $img_fn ) {
+            my $url = "$imgcache/$$img{url}/width=$$img{width}/$$img{id}";
+            # printf STDERR "DBG: %s\n", $url;
+            my $response = $ua->get($url);
+            if ($response->{success}) {
+                my $content = $response->{content};
+                open my $fh, '>', $img_fn or die "$!.";
+                print $fh $content;
+                close $fh;
+                printf STDERR "    Downloaded %s\n", $img_fn;
+            } else {
+                printf STDERR "    Can't retrieve %s : %s\n", $url, $response->{status};
+            }
+        }
+    } else {
+        printf STDERR "    No preview-image found!\n";
     }
 
     # Make sure that we don't update multiple files when a versionid was
