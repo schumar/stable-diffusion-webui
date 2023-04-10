@@ -11,7 +11,7 @@
 
 # Commandline arguments for webui.py, for example: export COMMANDLINE_ARGS="--medvram --opt-split-attention"
 #export COMMANDLINE_ARGS="--lowvram --always-batch-cond-uncond --theme dark --xformers"
-export COMMANDLINE_ARGS="--theme dark --no-half-vae"
+export COMMANDLINE_ARGS="--theme dark --no-half-vae --listen --medvram --enable-insecure-extension-access"
 
 # python3 executable
 python_cmd="python3.10"
@@ -43,6 +43,8 @@ python_cmd="python3.10"
 
 # Uncomment to enable accelerated launch
 #export ACCELERATE="True"
+
+export PYTORCH_CUDA_ALLOC_CONF='max_split_size_mb:8192'
 
 [ -d /tmp/webui ] || mkdir /tmp/webui
 chmod 700 /tmp/webui
