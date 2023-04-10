@@ -17,6 +17,10 @@ my $metadir = "$basedir/models/meta";
 my $authcookie = 'SET_ME';
 my $imgcache = 'https://imagecache.civitai.com/xG1nkqKTMzGDvpLrqFT7WA';
 
+# our console (hopefully) understands utf-8:
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
 my $guess;
 my $allow_multimatch;
 my $update;
