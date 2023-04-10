@@ -60,7 +60,7 @@ my %example_yaml_keys = (
 # Read all JSONs
 my @json;
 opendir my $dh, $metadir or die "Can't open $metadir: $!.";
-while (readdir $dh) {
+JSON: while (readdir $dh) {
     next if /^\./;
     next unless /\.json$/;
 
@@ -69,11 +69,21 @@ while (readdir $dh) {
     binmode $fh, ':encoding(UTF-8)';
     my $decoded = $json_codec->decode(<$fh>);
     close $fh;
-    # my $decoded = YAML::LoadFile("$metadir/$_");
-    # hack: create link to page
-    $$decoded{props}{pageProps}{trpcState}{json}{queries}[0]{state}{data}{page_url} =
-        "https://civitai.com/models/$$decoded{props}{pageProps}{id}/$$decoded{props}{pageProps}{slug}";
-    push @json, $$decoded{props}{pageProps}{trpcState}{json}{queries}[0]{state}{data};
+
+    # Find the query index for the model
+    for my $query (@{$$decoded{props}{pageProps}{trpcState}{json}{queries}}) {
+        if (exists $$query{state}{data}{name} and exists $$query{state}{data}{modelVersions}) {
+            # hack: create link to page
+            my $slug;
+            my $id;
+            $slug = $$decoded{query}{slug}[0] || $$decoded{props}{pageProps}{slug};
+            $id   = $$decoded{query}{id} || $$decoded{props}{pageProps}{id};
+            $$query{state}{data}{page_url} = "https://civitai.com/models/$id/$slug";
+            push @json, $$query{state}{data};
+            next JSON;
+        }
+    }
+    printf STDERR "No info found in '%s'.\n", $_;
 }
 closedir $dh;
 
