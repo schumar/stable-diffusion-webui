@@ -273,7 +273,7 @@ while (my $fn = shift @ARGV) {
     if (@candidates > 1) {
         printf STDERR "    Multiple matching versions found :(\n";
         for my $c (@candidates) {
-            printf STDERR "        %s (%s)\n", $$c{json}{name}, $$c{version}{name};
+            printf STDERR "        %s (%s)\n", $$c{json}{page_url}, $$c{version}{name};
         }
         next unless $allow_multimatch;
     }
