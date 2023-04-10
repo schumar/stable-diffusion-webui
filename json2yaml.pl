@@ -62,7 +62,7 @@ my @json;
 opendir my $dh, $metadir or die "Can't open $metadir: $!.";
 while (readdir $dh) {
     next if /^\./;
-    next unless /\.json/;
+    next unless /\.json$/;
 
     local $/ = undef;
     open my $fh, '<', "$metadir/$_" or die "Can't open $_: $!.";
