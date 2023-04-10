@@ -66,7 +66,7 @@ while (readdir $dh) {
 
     local $/ = undef;
     open my $fh, '<', "$metadir/$_" or die "Can't open $_: $!.";
-    binmode $fh, ':utf8';
+    binmode $fh, ':encoding(UTF-8)';
     my $decoded = $json_codec->decode(<$fh>);
     close $fh;
     # my $decoded = YAML::LoadFile("$metadir/$_");
