@@ -59,6 +59,7 @@ my %example_yaml_keys = (
 
 # Read all JSONs
 my @json;
+my %preview;
 opendir my $dh, $metadir or die "Can't open $metadir: $!.";
 JSON: while (readdir $dh) {
     next if /^\./;
@@ -70,8 +71,20 @@ JSON: while (readdir $dh) {
     my $decoded = $json_codec->decode(<$fh>);
     close $fh;
 
-    # Find the query index for the model
+    # Find the query index for the model/preview
     for my $query (@{$$decoded{props}{pageProps}{trpcState}{json}{queries}}) {
+        if (exists $$query{state}{data}{pages}[0]{items}) {
+            for my $item (@{$$query{state}{data}{pages}[0]{items}}) {
+
+                next unless exists $$item{modelVersionId};
+
+                # only use the first image for each modelVersion
+                next if exists $preview{$$item{modelVersionId}};
+
+                $preview{$$item{modelVersionId}} = $item;
+            }
+        }
+
         if (exists $$query{state}{data}{name} and exists $$query{state}{data}{modelVersions}) {
             # hack: create link to page
             my $slug;
@@ -80,10 +93,8 @@ JSON: while (readdir $dh) {
             $id   = $$decoded{query}{id} || $$decoded{props}{pageProps}{id};
             $$query{state}{data}{page_url} = "https://civitai.com/models/$id/$slug";
             push @json, $$query{state}{data};
-            next JSON;
         }
     }
-    printf STDERR "No info found in '%s'.\n", $_;
 }
 closedir $dh;
 
@@ -374,7 +385,7 @@ while (my $fn = shift @ARGV) {
 
     (my $img_fn = $fn) =~ s/\.[^.]*$//;
     $img_fn .= '.preview.png';
-    my $img = $$version{images}[0];
+    my $img = $preview{$$version{id}};
     if (defined $img) {
         if ( ! -e $img_fn ) {
             my $url = "$imgcache/$$img{url}/width=$$img{width}/$$img{id}";
