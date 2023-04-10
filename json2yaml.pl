@@ -296,6 +296,7 @@ while (my $fn = shift @ARGV) {
         updated => $$version{updatedAt},
         base    => $$version{baseModel},
         trigger => $$version{trainedWords},
+        verdesc => $$version{description},
         url     => $$file{url},
         'filename-orig' => $$file{name},
     );
